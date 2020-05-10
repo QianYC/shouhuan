@@ -11,30 +11,58 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
+#include "freertos/event_groups.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
 
+#include "lwip/err.h"
+#include "lwip/sys.h"
 
-void app_main(void)
-{
-    printf("Hello world!\n");
+#include "driver/i2c.h"
 
-    /* Print chip information */
-    esp_chip_info_t chip_info;
-    esp_chip_info(&chip_info);
-    printf("This is ESP32 chip with %d CPU cores, WiFi%s%s, ",
-            chip_info.cores,
-            (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-            (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
+//pin definitions for MAX30102
+#define SCL_PIN 26
+#define SDA_PIN 25
+#define MAX30102_ADDR 0x57
 
-    printf("silicon revision %d, ", chip_info.revision);
+uint8_t buffer[32];
 
-    printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
-            (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
+static void i2c_master_init(){
+    i2c_config_t config;
+    config.mode = I2C_MODE_MASTER;
+    config.sda_io_num = SDA_PIN;
+    config.scl_io_num = SCL_PIN;
+    config.sda_pullup_en = GPIO_PULLUP_ENABLE;
+    config.scl_pullup_en = GPIO_PULLUP_ENABLE;
+    config.master.clk_speed = 100000;
+    i2c_param_config(I2C_NUM_0, &config);
+    i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+}
 
-    for (int i = 10; i >= 0; i--) {
-        printf("Restarting in %d seconds...\n", i);
+void read_max30102(){
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (MAX30102_ADDR << 1) | I2C_MASTER_READ, true);
+    i2c_master_read(cmd, buffer, sizeof(buffer), I2C_MASTER_ACK);
+    i2c_master_stop(cmd);
+    i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000/portTICK_RATE_MS);
+}
+
+void task(void* pvParameter){
+    while(true){
+        read_max30102();
+        printf("read buffer...\n");
+        for (size_t i = 0; i < sizeof(buffer); i++){
+            printf("%d ", buffer[i]);
+        }
+        printf("\nbuffer ends...\n");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
+}
+
+void app_main(void){
+    i2c_master_init();
+    xTaskCreate(task, "MAX30103", 1024 * 2, NULL, 1, NULL);
 }
