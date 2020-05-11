@@ -43,7 +43,7 @@ static esp_err_t i2c_read_reg(int reg, uint8_t *data_rd, size_t size)
     i2c_master_write_byte(cmd, (MAX_I2C_ADDR << 1) | READ_BIT, ENABLE);
     for (size_t i = 0; i < size; i++)
     {
-        i2c_master_read_byte(cmd, data_rd + i - 1, NACK_VAL);
+        i2c_master_read_byte(cmd, data_rd + i, NACK_VAL);
     }
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(MAX_I2C_NUM, cmd, 1000 / portTICK_RATE_MS);
@@ -100,26 +100,26 @@ static esp_err_t max_configure()
     ERR_CHECK
     
     //Configure FIFO: No average, enable rollover(continue filling new data when full), almost full set to 32
-    err = i2c_write_byte_reg(MAX_FIFO_CONF_ADDR,0x10)
+    err = i2c_write_byte_reg(MAX_FIFO_CONF_ADDR,0x10);
     ERR_CHECK
 
     //Configure Mode: Multi-LED mode
-    err=i2c_write_byte_reg(MAX_MODE_CONF_ADDR,0x07)
+    err=i2c_write_byte_reg(MAX_MODE_CONF_ADDR,0x07);
     ERR_CHECK
 
     //Configure SPO2: Range 2048, 50 samples/sec, 411us pulse width(ADC resolution 18 bits)
-    err=i2c_write_byte_reg(MAX_SPO2_CONF_ADDR,0x03)
+    err=i2c_write_byte_reg(MAX_SPO2_CONF_ADDR,0x03);
     ERR_CHECK
 
     //Configure Multi-LED: SLOT1 IR, SLOT2 Red, SLOT3/4 Disabled
-    err=i2c_write_byte_reg(MAX_MULT_LED_CONF1_ADDR,0x12)
+    err=i2c_write_byte_reg(MAX_MULT_LED_CONF1_ADDR,0x12);
     ERR_CHECK
 
-    err=i2c_write_byte_reg(MAX_MULT_LED_CONF2_ADDR,0x0)
+    err=i2c_write_byte_reg(MAX_MULT_LED_CONF2_ADDR,0x0);
     ERR_CHECK
 
     //Configure Temperature: Enable
-    err=i2c_write_byte_reg(MAX_DIE_TEMP_CONF_ADDR,0x01)
+    err=i2c_write_byte_reg(MAX_DIE_TEMP_CONF_ADDR,0x01);
     ERR_CHECK
 
     return err;
@@ -133,7 +133,7 @@ esp_err_t max30102_init()
 
     err = max_configure();
 
-    return 0;
+    return err;
 }
 
 esp_err_t max30102_read(maxData *data)
