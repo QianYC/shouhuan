@@ -91,8 +91,37 @@ static esp_err_t i2c_read_temp(uint8_t *temp_int, uint8_t *temp_frac)
 
 static esp_err_t max_configure()
 {
-    esp_err_t err=ESP_OK;
-    //TODO: configure reg
+    esp_err_t err;
+    //Configure Interrupt: Disable all interrupts(for now)
+    err = i2c_write_byte_reg(MAX_INT_EN_1_ADDR,0x00);
+    ERR_CHECK
+
+    err = i2c_write_byte_reg(MAX_INT_EN_2_ADDR,0x00);
+    ERR_CHECK
+    
+    //Configure FIFO: No average, enable rollover(continue filling new data when full), almost full set to 32
+    err = i2c_write_byte_reg(MAX_FIFO_CONF_ADDR,0x10)
+    ERR_CHECK
+
+    //Configure Mode: Multi-LED mode
+    err=i2c_write_byte_reg(MAX_MODE_CONF_ADDR,0x07)
+    ERR_CHECK
+
+    //Configure SPO2: Range 2048, 50 samples/sec, 411us pulse width(ADC resolution 18 bits)
+    err=i2c_write_byte_reg(MAX_SPO2_CONF_ADDR,0x03)
+    ERR_CHECK
+
+    //Configure Multi-LED: SLOT1 IR, SLOT2 Red, SLOT3/4 Disabled
+    err=i2c_write_byte_reg(MAX_MULT_LED_CONF1_ADDR,0x12)
+    ERR_CHECK
+
+    err=i2c_write_byte_reg(MAX_MULT_LED_CONF2_ADDR,0x0)
+    ERR_CHECK
+
+    //Configure Temperature: Enable
+    err=i2c_write_byte_reg(MAX_DIE_TEMP_CONF_ADDR,0x01)
+    ERR_CHECK
+
     return err;
 }
 
