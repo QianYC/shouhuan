@@ -15,6 +15,9 @@
     "esp_spi_flash.h": "c",
     "paramreader.h": "c",
     "err.h": "c",
-    "MAX30102.C": "cpp"
+    "MAX30102.C": "cpp",
+    "ostream": "cpp",
+    "*.ipp": "cpp",
+    "max30102.h": "c"
   }
 }
