@@ -72,10 +72,8 @@ static esp_err_t i2c_write_byte_reg(int reg, uint8_t data_wr)
 static esp_err_t i2c_read_fifo(uint8_t *fifo_data, uint8_t *sample_count)
 {
     esp_err_t err;
-    
-    uint8_t wr_pointer, rd_pointer;
-    uint8_t test = 10;
-    i2c_write_byte_reg(MAX_FIFO_RD_PTR_ADDR, test);
+    static uint8_t rd_pointer = 0;
+    uint8_t wr_pointer;
     err = i2c_read_reg(MAX_FIFO_WR_PTR_ADDR, &wr_pointer, 1);
     ERR_CHECK
 
@@ -163,7 +161,6 @@ static bool isABeat(int redAmp)
     static float lowAmp;
     static float highAmp;
     static int state;
-
     averageAmp = redAmp * SMOOTH_FACTOR + averageAmp * (1 - SMOOTH_FACTOR);
     if (redAmp > averageAmp)
     {
