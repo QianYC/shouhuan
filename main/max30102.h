@@ -45,8 +45,8 @@
 // uint8_t rd_pointer = 0;
 
 typedef struct max_data_struct{
-    float heartRate;
-    float bloodOxy;
+    int heartRate;
+    int bloodOxy;
     float temp;
 } maxData;
 

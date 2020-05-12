@@ -1,5 +1,6 @@
 #include "max30102.h"
 #include "esp_log.h"
+#include "spo2.h"
 
 #define ENABLE 1
 #define DISABLE 0
@@ -8,6 +9,8 @@
 
 #define WRITE_BIT 0
 #define READ_BIT 1
+
+#define TIMEOUT_COUNT 20
 
 //#define SMOOTH_FACTOR 0.08
 
@@ -115,23 +118,23 @@ static esp_err_t max_configure()
     err = i2c_write_byte_reg(MAX_INT_EN_2_ADDR, 0x00);
     ERR_CHECK
 
-    //Configure FIFO: No average, enable rollover(continue filling new data when full), almost full set to 32
-    err = i2c_write_byte_reg(MAX_FIFO_CONF_ADDR, 0x10);
+    //Configure FIFO: 4 average, enable rollover(continue filling new data when full), almost full set to 32
+    err = i2c_write_byte_reg(MAX_FIFO_CONF_ADDR, 0x50);
     ERR_CHECK
 
-    //Configure Mode: Multi-LED mode
-    err = i2c_write_byte_reg(MAX_MODE_CONF_ADDR, 0x07);
+    //Configure Mode: SPO2 mode
+    err = i2c_write_byte_reg(MAX_MODE_CONF_ADDR, 0x03);
     ERR_CHECK
 
-    //Configure SPO2: Range 2048, 50 samples/sec, 411us pulse width(ADC resolution 18 bits)
-    err = i2c_write_byte_reg(MAX_SPO2_CONF_ADDR, 0x03);
+    //Configure SPO2: Range 4096, 100 samples/sec, 411us pulse width(ADC resolution 18 bits)
+    err = i2c_write_byte_reg(MAX_SPO2_CONF_ADDR, 0x27);
     ERR_CHECK
 
     //Configure LED Current: set a small current
-    err = i2c_write_byte_reg(MAX_LED1_ADDR, 0x1F);
+    err = i2c_write_byte_reg(MAX_LED1_ADDR, 0x2A);
     ERR_CHECK
 
-    err = i2c_write_byte_reg(MAX_LED2_ADDR, 0x1F);
+    err = i2c_write_byte_reg(MAX_LED2_ADDR, 0x2A);
     ERR_CHECK
 
     //Configure Multi-LED: SLOT1 IR, SLOT2 Red, SLOT3/4 Disabled
@@ -192,24 +195,45 @@ esp_err_t max30102_read(maxData *data)
     uint8_t fifo_data[MAX_SAMPLE_MAX * MAX_BYTE_PER_SAMPLE];
     uint8_t temp_int, temp_frac;
     uint8_t samples = 0;
-    int RedSum = 0, IRSum = 0;
-    int RedRes, IRRes;
+    static int RedBufPtr = 0, IRBufPtr = 0;
+    static int BOTimeOutCount = 0,HRTimeOutCount = 0; 
+    static uint32_t RedBuf[BUFFER_SIZE], IRBuf[BUFFER_SIZE];
+    int32_t bloodOxy, heartRate;
+    int8_t bloodOxyValid, heartRateValid;
 
     err = i2c_read_fifo(fifo_data, &samples);
     ERR_CHECK
 
     err = i2c_read_temp(&temp_int, &temp_frac);
     ERR_CHECK
-    if (samples != 0)
+
+    for (int i = 0; i < samples; i++)
     {
-        for (int i = 0; i < samples; i++)
-        {
-            IRSum += ((fifo_data[i * MAX_BYTE_PER_SAMPLE] << 16) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 1] << 8) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 2]));
-            RedSum += ((fifo_data[i * MAX_BYTE_PER_SAMPLE + 3] << 16) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 4] << 8) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 5]));
+        IRBuf[IRBufPtr] = ((fifo_data[i * MAX_BYTE_PER_SAMPLE] << 16) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 1] << 8) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 2]));
+        IRBufPtr = (IRBufPtr + 1) % BUFFER_SIZE;
+        RedBuf[RedBufPtr] = ((fifo_data[i * MAX_BYTE_PER_SAMPLE + 3] << 16) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 4] << 8) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 5]));
+        RedBufPtr = (RedBufPtr + 1) % BUFFER_SIZE;
+    }
+    maxim_heart_rate_and_oxygen_saturation(IRBuf, BUFFER_SIZE, RedBuf, &bloodOxy, &bloodOxyValid, &heartRate, &heartRateValid);
+    if (bloodOxyValid)
+    {
+        data->bloodOxy = bloodOxy;
+    }
+    else{
+        BOTimeOutCount++;
+        if(BOTimeOutCount > TIMEOUT_COUNT){
+            data->bloodOxy = -1;
         }
-        IRRes = IRSum / samples;
-        RedRes = RedSum / samples;
-        printf("IR:%d, Red:%d\n", IRRes, RedRes);
+    }
+    if (heartRateValid)
+    {
+        data->heartRate = heartRate;
+    }
+    else{
+        HRTimeOutCount++;
+        if(HRTimeOutCount > TIMEOUT_COUNT){
+            data->heartRate = -1;
+        }
     }
     //get temperature
     if ((temp_int & (1 << 7)) == 0)
