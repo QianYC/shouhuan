@@ -42,8 +42,8 @@
 #define MAX_TEMP_FRAC_STEP 0.0625
 
 typedef struct max_data_struct{
-    float heartRate;
-    float bloodOxy;
+    int heartRate;
+    int bloodOxy;
     float temp;
 } maxData;
 

@@ -23,11 +23,11 @@
 #include "max30102.h"
 
 void app_main(void){
-    maxData data;
+    maxData data = {-1,-1,0.0};
    	max30102_init();
     for(;;){
         max30102_read(&data);
-        printf("HR:%f,BO:%f,temp:%f\n",data.heartRate,data.bloodOxy,data.temp);
+        printf("HR:%d,BO:%d,temp:%f\n",data.heartRate,data.bloodOxy,data.temp);
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
