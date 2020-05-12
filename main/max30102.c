@@ -94,6 +94,10 @@ static esp_err_t i2c_read_fifo(uint8_t *fifo_data, uint8_t *sample_count)
 static esp_err_t i2c_read_temp(uint8_t *temp_int, uint8_t *temp_frac)
 {
     esp_err_t err;
+
+    err = i2c_write_byte_reg(MAX_DIE_TEMP_CONF_ADDR, 0x01);
+    ERR_CHECK
+
     err = i2c_read_reg(MAX_DIE_TEMP_INT_ADDR, temp_int, 1);
     ERR_CHECK
 
@@ -135,10 +139,6 @@ static esp_err_t max_configure()
     ERR_CHECK
 
     err = i2c_write_byte_reg(MAX_MULT_LED_CONF2_ADDR, 0x0);
-    ERR_CHECK
-
-    //Configure Temperature: Enable
-    err = i2c_write_byte_reg(MAX_DIE_TEMP_CONF_ADDR, 0x01);
     ERR_CHECK
 
     return err;
