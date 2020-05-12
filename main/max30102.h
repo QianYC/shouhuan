@@ -38,6 +38,9 @@
 #define MAX_BYTE_PER_SAMPLE 6
 #define MAX_TEMP_FRAC_STEP 0.0625
 
+//variable to store the last fifo read position
+// uint8_t rd_pointer = 0;
+
 typedef struct max_data_struct{
     float heartRate;
     float bloodOxy;
