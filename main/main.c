@@ -20,20 +20,14 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#include "driver/i2c.h"
-
 #include "max30102.h"
 
-maxData data;
-
-void task(void* pvParameter){
-    printf("in task\n");
-    max30102_read(&data);
-    printf("heartRate : %f, bloodOxy : %f, temp : %f\n", data.heartRate, data.bloodOxy, data.temp);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-}
-
 void app_main(void){
-    max30102_init();
-    xTaskCreate(task, "max30102 task", 1024 * 2, NULL, 1, NULL);
+    maxData data;
+   	max30102_init();
+    for(;;){
+        max30102_read(&data);
+        printf("HR:%f,BO:%f,temp:%f\n",data.heartRate,data.bloodOxy,data.temp);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
 }
