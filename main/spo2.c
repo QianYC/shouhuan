@@ -96,7 +96,9 @@ void maxim_heart_rate_and_oxygen_saturation(uint32_t *pun_ir_buffer, int32_t n_i
     for (k = 0; k < BUFFER_SIZE - MA4_SIZE; k++)
     {
         an_x[k] = (an_x[k] + an_x[k + 1] + an_x[k + 2] + an_x[k + 3]) / (int)4;
+        //printf("%d\t",an_x[k]);
     }
+    //printf("\n\n");
     // calculate threshold
     n_th1 = 0;
     for (k = 0; k < BUFFER_SIZE; k++)
@@ -211,10 +213,6 @@ void maxim_heart_rate_and_oxygen_saturation(uint32_t *pun_ir_buffer, int32_t n_i
         *pch_spo2_valid = 0;
     }
 }
-static int32_t min(int32_t a, int32_t b)
-{
-    return a < b ? a : b;
-}
 
 void maxim_find_peaks(int32_t *pn_locs, int32_t *n_npks, int32_t *pn_x, int32_t n_size, int32_t n_min_height, int32_t n_min_distance, int32_t n_max_num)
 /**
@@ -228,6 +226,7 @@ void maxim_find_peaks(int32_t *pn_locs, int32_t *n_npks, int32_t *pn_x, int32_t 
     maxim_peaks_above_min_height(pn_locs, n_npks, pn_x, n_size, n_min_height);
     maxim_remove_close_peaks(pn_locs, n_npks, pn_x, n_min_distance);
     *n_npks = min(*n_npks, n_max_num);
+    //printf("%d\n\n",*n_npks);
 }
 
 void maxim_peaks_above_min_height(int32_t *pn_locs, int32_t *n_npks, int32_t *pn_x, int32_t n_size, int32_t n_min_height)

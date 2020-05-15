@@ -10,7 +10,7 @@
 #define WRITE_BIT 0
 #define READ_BIT 1
 
-#define TIMEOUT_COUNT 20
+#define TIMEOUT_COUNT 8
 
 //#define SMOOTH_FACTOR 0.08
 
@@ -127,14 +127,14 @@ static esp_err_t max_configure()
     ERR_CHECK
 
     //Configure SPO2: Range 4096, 100 samples/sec, 411us pulse width(ADC resolution 18 bits)
-    err = i2c_write_byte_reg(MAX_SPO2_CONF_ADDR, 0x27);
+    err = i2c_write_byte_reg(MAX_SPO2_CONF_ADDR, 0x67);
     ERR_CHECK
 
     //Configure LED Current: set a small current
-    err = i2c_write_byte_reg(MAX_LED1_ADDR, 0x2A);
+    err = i2c_write_byte_reg(MAX_LED1_ADDR, 0xAF);
     ERR_CHECK
 
-    err = i2c_write_byte_reg(MAX_LED2_ADDR, 0x2A);
+    err = i2c_write_byte_reg(MAX_LED2_ADDR, 0xAF);
     ERR_CHECK
 
     //Configure Multi-LED: SLOT1 IR, SLOT2 Red, SLOT3/4 Disabled
@@ -199,6 +199,7 @@ esp_err_t max30102_read(maxData *data)
     static int BOTimeOutCount = 0,HRTimeOutCount = 0; 
     static uint32_t RedBuf[BUFFER_SIZE], IRBuf[BUFFER_SIZE];
     int32_t bloodOxy, heartRate;
+    static int32_t heartRate2,heartRate3;
     int8_t bloodOxyValid, heartRateValid;
 
     err = i2c_read_fifo(fifo_data, &samples);
@@ -210,9 +211,12 @@ esp_err_t max30102_read(maxData *data)
     for (int i = 0; i < samples; i++)
     {
         IRBuf[IRBufPtr] = ((fifo_data[i * MAX_BYTE_PER_SAMPLE] << 16) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 1] << 8) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 2]));
+        //printf("IR:%d  ",IRBuf[IRBufPtr]);
         IRBufPtr = (IRBufPtr + 1) % BUFFER_SIZE;
         RedBuf[RedBufPtr] = ((fifo_data[i * MAX_BYTE_PER_SAMPLE + 3] << 16) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 4] << 8) + (fifo_data[i * MAX_BYTE_PER_SAMPLE + 5]));
+        //printf("%d\t",RedBuf[RedBufPtr]);
         RedBufPtr = (RedBufPtr + 1) % BUFFER_SIZE;
+        
     }
     maxim_heart_rate_and_oxygen_saturation(IRBuf, BUFFER_SIZE, RedBuf, &bloodOxy, &bloodOxyValid, &heartRate, &heartRateValid);
     if (bloodOxyValid)
@@ -227,7 +231,10 @@ esp_err_t max30102_read(maxData *data)
     }
     if (heartRateValid)
     {
-        data->heartRate = heartRate;
+        
+        data->heartRate = (heartRate+(heartRate2>>1)+(heartRate3>>1))/2;
+        heartRate3=heartRate2;
+        heartRate2=heartRate;
     }
     else{
         HRTimeOutCount++;

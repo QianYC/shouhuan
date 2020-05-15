@@ -21,13 +21,15 @@
 #include "lwip/sys.h"
 
 #include "max30102.h"
+#include "network.h"
 
 void app_main(void){
     maxData data = {-1,-1,0.0};
    	max30102_init();
+    esp_err_t wifi_err = wifi_init();
     for(;;){
         max30102_read(&data);
         printf("HR:%d,BO:%d,temp:%f\n",data.heartRate,data.bloodOxy,data.temp);
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
