@@ -27,8 +27,10 @@ void app_main(void){
     maxData data = {-1,-1,0.0};
    	max30102_init();
     esp_err_t wifi_err = wifi_init();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     for(;;){
         max30102_read(&data);
+        http_upload(data.heartRate,data.bloodOxy,data.temp);
         printf("HR:%d,BO:%d,temp:%f\n",data.heartRate,data.bloodOxy,data.temp);
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
