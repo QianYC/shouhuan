@@ -54,7 +54,7 @@ esp_err_t http_upload(int heartRate, int bloodOxy, float temp)
     if (client == NULL)
     {
         esp_http_client_config_t config = {
-            .url = HTTP_URL,
+            .url = UPLOAD_URL,
             .event_handler = http_event_handle,
         };
         client = esp_http_client_init(&config);

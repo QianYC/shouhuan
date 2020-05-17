@@ -18,6 +18,7 @@
     "MAX30102.C": "cpp",
     "ostream": "cpp",
     "*.ipp": "cpp",
-    "max30102.h": "c"
+    "max30102.h": "c",
+    "network.h": "c"
   }
 }
