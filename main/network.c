@@ -47,6 +47,14 @@ esp_err_t wifi_init()
     return esp_wifi_connect();
 }
 
+static int check_wifi(){
+    wifi_ap_record_t ap;
+    if(ESP_OK != esp_wifi_sta_get_ap_info(&ap)){
+        return 1;
+    }
+    return 0;
+}
+
 static esp_err_t http_event_handle(esp_http_client_event_t *e)
 {
     switch (e->event_id)
@@ -77,8 +85,8 @@ static esp_err_t http_event_handle(esp_http_client_event_t *e)
     return ESP_OK;
 }
 
-int mayInitClient(char *url){
-    if (client == NULL)
+static int mayInitClient(char *url){
+    if (NULL == client)
     {
         esp_http_client_config_t config = {
             .url = url,
@@ -86,12 +94,25 @@ int mayInitClient(char *url){
         };
         client = esp_http_client_init(&config);
     }
-    return client == NULL;
+    return  NULL == client;
 }
 
 esp_err_t http_getId()
 {
-    mayInitClient(ID_URL);
+    //Check wifi connection
+    if(check_wifi()){
+        if(ESP_OK != esp_wifi_connect()){
+            printf("Unable to connect wifi\n");
+            return ESP_OK;
+        }
+    }
+
+    //Check http connection
+    if(mayInitClient(ID_URL)){
+        printf("Connection Failed\n");
+        return ESP_OK;
+    }
+    
 
     ESP_ERROR_CHECK(esp_http_client_set_url(client, ID_URL));
     ESP_ERROR_CHECK(esp_http_client_set_method(client, HTTP_METHOD_GET));
@@ -102,7 +123,20 @@ esp_err_t http_getId()
 esp_err_t http_upload(int heartRate, int bloodOxy, float temp)
 {
     char post[POST_LEN];
-    mayInitClient(UPLOAD_URL);
+    //Check wifi connection
+    if(check_wifi()){
+        if(ESP_OK != esp_wifi_connect()){
+            printf("Unable to connect wifi\n");
+            return ESP_OK;
+        }
+    }
+
+    //Check http connection
+    if(mayInitClient(UPLOAD_URL)){
+        printf("Connection Failed\n");
+        return ESP_OK;
+    }
+    
 
     if (haveId == 1)
     {
