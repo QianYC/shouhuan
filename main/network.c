@@ -1,8 +1,10 @@
 #include "network.h"
 #include "string.h"
 
-esp_http_client_handle_t client=NULL;
-int id;
+esp_http_client_handle_t client = NULL;
+char id[ID_LENGTH];
+uint8_t haveId;
+//uint8_t rcvBuffer[HTTP_BUFFER_SIZE];
 
 esp_err_t wifi_init()
 {
@@ -47,20 +49,52 @@ esp_err_t wifi_init()
 
 static esp_err_t http_event_handle(esp_http_client_event_t *e)
 {
+    switch (e->event_id)
+    {
+    case HTTP_EVENT_ERROR:
+        break;
+    case HTTP_EVENT_ON_CONNECTED:
+        //printf("Connected to Server\n");
+        break;
+    case HTTP_EVENT_HEADER_SENT:
+        break;
+    case HTTP_EVENT_ON_HEADER:
+        break;
+    case HTTP_EVENT_ON_FINISH:
+        break;
+    case HTTP_EVENT_DISCONNECTED:
+        //printf("Disconnected to Server\n");
+        break;
+    case HTTP_EVENT_ON_DATA:
+        if (!esp_http_client_is_chunked_response(e->client) && e->data_len == ID_LENGTH)
+        {
+            memcpy(id, e->data, ID_LENGTH);
+            haveId=1;
+            printf("Get ID: %s\n", id);
+        }
+        break;
+    }
     return ESP_OK;
 }
 
-esp_err_t http_getId(){
+int mayInitClient(char *url){
     if (client == NULL)
     {
         esp_http_client_config_t config = {
-            .url = ID_URL,
+            .url = url,
             .event_handler = http_event_handle,
         };
         client = esp_http_client_init(&config);
     }
-    ESP_ERROR_CHECK(esp_http_client_set_url(client,ID_URL));
-    ESP_ERROR_CHECK(esp_http_client_set_method(client,HTTP_METHOD_GET));
+    return client == NULL;
+}
+
+esp_err_t http_getId()
+{
+    mayInitClient(ID_URL);
+
+    ESP_ERROR_CHECK(esp_http_client_set_url(client, ID_URL));
+    ESP_ERROR_CHECK(esp_http_client_set_method(client, HTTP_METHOD_GET));
     ESP_ERROR_CHECK(esp_http_client_perform(client));
     return ESP_OK;
 }
@@ -68,18 +102,20 @@ esp_err_t http_getId(){
 esp_err_t http_upload(int heartRate, int bloodOxy, float temp)
 {
     char post[POST_LEN];
-    if (client == NULL)
+    mayInitClient(UPLOAD_URL);
+
+    if (haveId == 1)
     {
-        esp_http_client_config_t config = {
-            .url = UPLOAD_URL,
-            .event_handler = http_event_handle,
-        };
-        client = esp_http_client_init(&config);
+        sprintf(post, "\"id\" : %s, \"Temp\" : %f, \"SPO\" : %d, \"HR\" : %d", id, temp, bloodOxy, heartRate);
+        ESP_ERROR_CHECK(esp_http_client_set_url(client, UPLOAD_URL));
+        ESP_ERROR_CHECK(esp_http_client_set_method(client, HTTP_METHOD_POST));
+        ESP_ERROR_CHECK(esp_http_client_set_header(client, "Content-Type", "application/json"));
+        ESP_ERROR_CHECK(esp_http_client_set_post_field(client, post, strlen(post)));
+        return esp_http_client_perform(client);
     }
-    sprintf(post,"\"Temp\" : %f, \"SPO\" : %d, \"HR\" : %d",temp,bloodOxy,heartRate);
-    ESP_ERROR_CHECK(esp_http_client_set_url(client,UPLOAD_URL));
-    ESP_ERROR_CHECK(esp_http_client_set_method(client,HTTP_METHOD_POST));
-    ESP_ERROR_CHECK(esp_http_client_set_header(client, "Content-Type", "application/json"));
-    ESP_ERROR_CHECK(esp_http_client_set_post_field(client,post,strlen(post)));
-    return esp_http_client_perform(client);
+    else
+    {
+        printf("Can't upload due to lack of ID\n");
+        return ESP_OK;
+    }
 }
