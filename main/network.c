@@ -60,6 +60,7 @@ static esp_err_t http_event_handle(esp_http_client_event_t *e)
     switch (e->event_id)
     {
     case HTTP_EVENT_ERROR:
+        //printf("Event error\n");
         break;
     case HTTP_EVENT_ON_CONNECTED:
         //printf("Connected to Server\n");
@@ -69,6 +70,7 @@ static esp_err_t http_event_handle(esp_http_client_event_t *e)
     case HTTP_EVENT_ON_HEADER:
         break;
     case HTTP_EVENT_ON_FINISH:
+        //printf("Finish\n");
         break;
     case HTTP_EVENT_DISCONNECTED:
         //printf("Disconnected to Server\n");
@@ -140,7 +142,7 @@ esp_err_t http_upload(int heartRate, int bloodOxy, float temp)
 
     if (haveId == 1)
     {
-        sprintf(post, "\"id\" : %s, \"Temp\" : %f, \"SPO\" : %d, \"HR\" : %d", id, temp, bloodOxy, heartRate);
+        sprintf(post,"{\"id\":\"%s\",\"Temp\":\"%f\",\"SPO\":\"%d\",\"HR\":\"%d\"}", id, temp, bloodOxy, heartRate);
         ESP_ERROR_CHECK(esp_http_client_set_url(client, UPLOAD_URL));
         ESP_ERROR_CHECK(esp_http_client_set_method(client, HTTP_METHOD_POST));
         ESP_ERROR_CHECK(esp_http_client_set_header(client, "Content-Type", "application/json"));
