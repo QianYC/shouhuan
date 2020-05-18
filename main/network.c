@@ -54,12 +54,12 @@ esp_err_t http_getId(){
     if (client == NULL)
     {
         esp_http_client_config_t config = {
-            .url = HTTP_GET_URL,
+            .url = ID_URL,
             .event_handler = http_event_handle,
         };
         client = esp_http_client_init(&config);
     }
-    ESP_ERROR_CHECK(esp_http_client_set_url(client,HTTP_GET_URL));
+    ESP_ERROR_CHECK(esp_http_client_set_url(client,ID_URL));
     ESP_ERROR_CHECK(esp_http_client_set_method(client,HTTP_METHOD_GET));
     ESP_ERROR_CHECK(esp_http_client_perform(client));
     return ESP_OK;
@@ -71,13 +71,13 @@ esp_err_t http_upload(int heartRate, int bloodOxy, float temp)
     if (client == NULL)
     {
         esp_http_client_config_t config = {
-            .url = HTTP_POST_URL,
+            .url = UPLOAD_URL,
             .event_handler = http_event_handle,
         };
         client = esp_http_client_init(&config);
     }
     sprintf(post,"\"Temp\" : %f, \"SPO\" : %d, \"HR\" : %d",temp,bloodOxy,heartRate);
-    ESP_ERROR_CHECK(esp_http_client_set_url(client,HTTP_POST_URL));
+    ESP_ERROR_CHECK(esp_http_client_set_url(client,UPLOAD_URL));
     ESP_ERROR_CHECK(esp_http_client_set_method(client,HTTP_METHOD_POST));
     ESP_ERROR_CHECK(esp_http_client_set_header(client, "Content-Type", "application/json"));
     ESP_ERROR_CHECK(esp_http_client_set_post_field(client,post,strlen(post)));
