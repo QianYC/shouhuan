@@ -17,8 +17,8 @@ flask run --host=0.0.0.0
 ```
 
 ## api
-### get
-- url: get /id
+### get id
+- url: post /id
 - response: uuid
 - 该方法只应该调用一次！手环获得了自己的id后应该保存起来，以后每次其他的请求都附上这个id！
 

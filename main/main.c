@@ -27,6 +27,7 @@ void app_main(void){
     maxData data = {-1,-1,0.0};
    	max30102_init();
     esp_err_t wifi_err = wifi_init();
+    printf("connected : %d\n", wifi_err == ESP_OK);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     http_getId();
     for(;;){
