@@ -77,7 +77,7 @@ static esp_err_t http_event_handle(esp_http_client_event_t *e)
         // printf("Disconnected to Server\n");
         break;
     case HTTP_EVENT_ON_DATA:
-        if (!esp_http_client_is_chunked_response(e->client))
+        if (!esp_http_client_is_chunked_response(e->client) && e->data_len == ID_LENGTH)
         {
             memcpy(id, e->data, ID_LENGTH);
             haveId=1;

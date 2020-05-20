@@ -7,13 +7,13 @@
 #include "esp_event.h" 
 #include "esp_http_client.h"
 
-#define NET_SSID "lizi502"
-#define NET_PWD "11028888"
-// #define NET_SSID "TP-LINK_3C75"
-// #define NET_PWD "35121216"
+//#define NET_SSID "lizi502"
+//#define NET_PWD "11028888"
+#define NET_SSID "TP-LINK_3C75"
+#define NET_PWD "35121216"
 
-#define ID_URL "http://192.168.0.101:5000/id"
-#define UPLOAD_URL "http://192.168.0.101:5000/upload"
+#define ID_URL "http://192.168.0.117:5000/id"
+#define UPLOAD_URL "http://192.168.0.117:5000/upload"
 #define HTTP_PORT 5000
 
 #define POST_LEN 120

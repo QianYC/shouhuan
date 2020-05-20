@@ -6,7 +6,7 @@ app = Flask(__name__)
 # Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b'_6#y2L"F4Q8z\n\xec]/'
 
-@app.route('/id', methods=['POST'])
+@app.route('/id', methods=['GET'])
 def testGet():
     id = uuid.uuid4()
     print('server creates a sessionId %s' % id)
