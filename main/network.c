@@ -4,6 +4,7 @@
 esp_http_client_handle_t client = NULL;
 char id[ID_LENGTH];
 uint8_t haveId;
+uint8_t tryCount;
 //uint8_t rcvBuffer[HTTP_BUFFER_SIZE];
 
 esp_err_t wifi_init()
@@ -80,6 +81,7 @@ static esp_err_t http_event_handle(esp_http_client_event_t *e)
         {
             memcpy(id, e->data, ID_LENGTH);
             haveId=1;
+            tryCount=0;
             printf("Get ID: %s\n", id);
         }
         break;
@@ -118,8 +120,7 @@ esp_err_t http_getId()
 
     ESP_ERROR_CHECK(esp_http_client_set_url(client, ID_URL));
     ESP_ERROR_CHECK(esp_http_client_set_method(client, HTTP_METHOD_GET));
-    ESP_ERROR_CHECK(esp_http_client_perform(client));
-    return ESP_OK;
+    return esp_http_client_perform(client);
 }
 
 esp_err_t http_upload(int heartRate, int bloodOxy, float temp)
@@ -129,14 +130,14 @@ esp_err_t http_upload(int heartRate, int bloodOxy, float temp)
     if(check_wifi()){
         if(ESP_OK != esp_wifi_connect()){
             printf("Unable to connect wifi\n");
-            return ESP_OK;
+            return ESP_ERR_WIFI_NOT_CONNECT;
         }
     }
 
     //Check http connection
     if(mayInitClient(UPLOAD_URL)){
         printf("Connection Failed\n");
-        return ESP_OK;
+        return ESP_ERR_HTTP_CONNECT;
     }
     
 
@@ -151,7 +152,11 @@ esp_err_t http_upload(int heartRate, int bloodOxy, float temp)
     }
     else
     {
+        tryCount++;
+        if(tryCount > MAX_TRY_COUNT){
+            http_getId();
+        }
         printf("Can't upload due to lack of ID\n");
-        return ESP_OK;
+        return ESP_ERR_HTTP_CONNECT;
     }
 }

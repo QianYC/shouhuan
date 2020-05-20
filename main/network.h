@@ -21,6 +21,8 @@
 #define HTTP_BUFFER_SIZE 500
 #define ID_LENGTH 36
 
+#define MAX_TRY_COUNT 8
+
 #define TAG "shouhuan"
 
 esp_err_t wifi_init();
