@@ -60,23 +60,23 @@ static esp_err_t http_event_handle(esp_http_client_event_t *e)
     switch (e->event_id)
     {
     case HTTP_EVENT_ERROR:
-        //printf("Event error\n");
+        // printf("Event error\n");
         break;
     case HTTP_EVENT_ON_CONNECTED:
-        //printf("Connected to Server\n");
+        // printf("Connected to Server\n");
         break;
     case HTTP_EVENT_HEADER_SENT:
         break;
     case HTTP_EVENT_ON_HEADER:
         break;
     case HTTP_EVENT_ON_FINISH:
-        //printf("Finish\n");
+        // printf("Finish\n");
         break;
     case HTTP_EVENT_DISCONNECTED:
-        //printf("Disconnected to Server\n");
+        // printf("Disconnected to Server\n");
         break;
     case HTTP_EVENT_ON_DATA:
-        if (!esp_http_client_is_chunked_response(e->client) && e->data_len == ID_LENGTH)
+        if (!esp_http_client_is_chunked_response(e->client))
         {
             memcpy(id, e->data, ID_LENGTH);
             haveId=1;

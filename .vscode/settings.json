@@ -19,6 +19,13 @@
     "ostream": "cpp",
     "*.ipp": "cpp",
     "max30102.h": "c",
-    "network.h": "c"
+    "network.h": "c",
+    "locale": "c",
+    "thread": "c",
+    "xlocale": "c",
+    "xlocmes": "c",
+    "xlocmon": "c",
+    "xlocnum": "c",
+    "xloctime": "c"
   }
 }
