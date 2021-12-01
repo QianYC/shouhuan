@@ -1,4 +1,4 @@
-## prerequisit
+## prerequisite
 pip install flask
 
 ## run
